@@ -1,0 +1,46 @@
+FROM alpine:3
+
+LABEL maintainer="Colin Hutchinson"
+
+# Set environment variables for Kong version and architecture
+ARG KONG_PACKAGE_VERSION=1.2.13
+ARG KONG_VERSION=3.2.1
+
+# Install dependencies and download Kong package
+RUN set -ex; \
+    apk add --no-cache bash curl ca-certificates libstdc++ libgcc openssl pcre perl tzdata libcap zlib zlib-dev; \
+    if [ "$(apk --print-arch)" = "aarch64" ]; then \
+        ARCH="arm64"; \
+    else \
+        ARCH="amd64"; \
+    fi; \
+    DOWNLOAD_URL="https://github.com/gh-org-template/kong-package/releases/download/${KONG_PACKAGE_VERSION}/kong-${KONG_VERSION}.${ARCH}.apk.tar.gz"; \
+    curl -fSL -o /tmp/kong.apk.tar.gz $DOWNLOAD_URL; \
+    apk add --no-cache --virtual .build-deps tar gzip; \
+    tar -C / -xzf /tmp/kong.apk.tar.gz; \
+    apk del .build-deps; \
+    adduser -S kong; \
+    addgroup -S kong; \
+    mkdir -p /usr/local/kong; \
+    chown -R kong:0 /usr/local/kong; \
+    chown kong:0 /usr/local/bin/kong; \
+    chmod -R g=u /usr/local/kong; \
+    rm -rf /tmp/kong.apk.tar.gz; \
+    ln -s /usr/local/openresty/bin/resty /usr/local/bin/resty; \
+    ln -s /usr/local/openresty/luajit/bin/luajit /usr/local/bin/luajit; \
+    ln -s /usr/local/openresty/luajit/bin/luajit /usr/local/bin/lua; \
+    ln -s /usr/local/openresty/nginx/sbin/nginx /usr/local/bin/nginx; \
+    kong version
+
+# Copy and set permissions for entrypoint script
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# Set entrypoint
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Expose necessary ports
+EXPOSE 8000 8443 8001 8444
+
+# Define the default command
+CMD ["kong", "docker-start"]
