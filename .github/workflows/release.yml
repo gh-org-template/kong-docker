@@ -67,12 +67,11 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and push Docker Image
-      if: ${{ needs.release.outputs.published == 'true' }}
       uses: docker/build-push-action@v5
       with:
         context: .
         platforms: linux/${{ matrix.architecture.docker }}
-        push: true
+        push: ${{ needs.release.outputs.published == 'true' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
