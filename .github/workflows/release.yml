@@ -41,38 +41,31 @@ jobs:
     - uses: docker/setup-qemu-action@v3
     - uses: docker/setup-buildx-action@v3
 
-    - name: Docker meta (released)
-      if: ${{ needs.release.outputs.published == 'true' }}
+    - name: Set release tag
+      id: set-tag
+      run: |
+        if [ -n "${{ needs.release.outputs.release-git-tag }}" ]; then
+          echo "RELEASE_TAG=${{ needs.release.outputs.release-git-tag }}" >> $GITHUB_ENV
+        else
+          echo "RELEASE_TAG=unreleased" >> $GITHUB_ENV
+        fi
+
+    - name: Docker meta
       id: meta
       uses: docker/metadata-action@v5
       with:
         images: ghcr.io/gh-org-template/kong-docker
         tags: |
           type=ref,event=branch
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=raw,value=${{ needs.release.outputs.release-git-tag }}
           type=sha
+          type=raw,value=${{ env.RELEASE_TAG }}
         flavor: |
           suffix=-${{ matrix.architecture }}-${{ matrix.os.os }}
         labels: |
-          org.opencontainers.image.version=${{ needs.release.outputs.release-git-tag }}
+          org.opencontainers.image.version=${{ env.RELEASE_TAG }}
           org.opencontainers.image.revision={{sha}}
           org.opencontainers.image.created={{date 'YYYY-MM-DDTHH:mm:ssZ'}}
 
-    - name: Docker meta (unreleased)
-      if: ${{ needs.release.outputs.published == 'false' }}
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ghcr.io/gh-org-template/kong-docker
-        tags: |
-          type=sha
-        flavor: |
-          suffix=-${{ matrix.architecture }}-${{ matrix.os.os }}
-        labels: |
-          org.opencontainers.image.revision={{sha}}
-          org.opencontainers.image.created={{date 'YYYY-MM-DDTHH:mm:ssZ'}}
 
     - name: Log in to the Container registry
       if: ${{ needs.release.outputs.published == 'true' }}
@@ -92,7 +85,7 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         file: Dockerfile.${{ matrix.os.package_type }}
         build-args: |
-          ARCH=${{ matrix.architecture }}
+          ARCH=${{ matrix.architecture.docker }}
           DISTRIBUTION_OS=${{ matrix.os.os }}
           DISTRIBUTION_VERSION=${{ matrix.os.version }}
 
