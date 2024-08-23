@@ -21,7 +21,7 @@ sources:
       username: '{{ requiredEnv "UPDATECLI_GITHUB_ACTOR" }}'
 
 targets:
-  updateBaseDockerVersion:
+  kong-package-docker:
     name: "Update base image"
     sourceid: kong-package
     kind: dockerfile
@@ -33,3 +33,10 @@ targets:
       instruction:
         keyword: "ARG"
         matcher: "KONG_PACKAGE_VERSION"
+  kong-package-env-file:
+    name: "Copy the kong-development env file"
+    sourceid: kong-package
+    kind: shell
+    spec:
+      command: |
+        rm .env && wget https://raw.githubusercontent.com/gh-org-template/kong-package/{{ source "kong-package" }}/.env && exit 0
