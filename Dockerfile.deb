@@ -1,9 +1,11 @@
-FROM ubuntu:22.04
+ARG DISTRIBUTION_OS=debian
+ARG DISTRIBUTION_VERSION=12-slim
+FROM ${DISTRIBUTION_OS}:${DISTRIBUTION_VERSION}
 
 LABEL maintainer="Colin Hutchinson"
 
 # Set environment variables for Kong version and architecture
-ARG KONG_PACKAGE_VERSION=1.2.12
+ARG KONG_PACKAGE_VERSION=1.2.16
 ARG KONG_VERSION=3.2.1
 ARG ARCH=amd64
 
@@ -17,7 +19,7 @@ RUN set -e; \
     else \
         ARCH="amd64"; \
     fi; \
-    DOWNLOAD_URL="https://github.com/gh-org-template/kong-package/releases/download/${KONG_PACKAGE_VERSION}/kong-${KONG_VERSION}-ubuntu-22.04.${ARCH}.deb"; \
+    DOWNLOAD_URL="https://github.com/gh-org-template/kong-package/releases/download/${KONG_PACKAGE_VERSION}/kong-${KONG_VERSION}.${ARCH}.deb"; \
     curl -fSL -o /tmp/kong.deb $DOWNLOAD_URL; \
     apt-get install -y /tmp/kong.deb \
     && rm -rf /var/lib/apt/lists/* \
