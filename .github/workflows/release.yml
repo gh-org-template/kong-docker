@@ -32,7 +32,7 @@ jobs:
     name: Build and Push Docker Images
     strategy:
       matrix:
-        architecture: [{cpu: x86_64, docker: amd64},{cpu: aarch64, docker: arm64}]
+        architecture: [amd64, arm64]
         os: [{package_type: deb, os: ubuntu, version: 22.04}, {package_type: deb, os: debian, version: 12-slim}, {package_type: apk, os: alpine, version: 3}, {package_type: rpm, os: redhat/ubi9, version: latest}, {package_type: rpm, os: amazonlinux, version: 2023}]
     runs-on: ubuntu-latest
     steps:
@@ -52,7 +52,7 @@ jobs:
           type=semver,pattern={{major}}.{{minor}}
           type=sha
         flavor: |
-          suffix=-${{ matrix.architecture.docker }}-${{ matrix.os.os }}
+          suffix=-${{ matrix.architecture }}-${{ matrix.os.os }}
         labels: |
           org.opencontainers.image.version={{version}}
           org.opencontainers.image.revision={{sha}}
@@ -70,13 +70,13 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        platforms: linux/${{ matrix.architecture.docker }}
+        platforms: linux/${{ matrix.architecture }}
         push: ${{ needs.release.outputs.published == 'true' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         file: Dockerfile.${{ matrix.os.package_type }}
         build-args: |
-          ARCH=${{ matrix.architecture.docker }}
+          ARCH=${{ matrix.architecture }}
           DISTRIBUTION_OS=${{ matrix.os.os }}
           DISTRIBUTION_VERSION=${{ matrix.os.version }}
 
