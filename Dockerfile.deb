@@ -6,8 +6,13 @@ LABEL maintainer="Colin Hutchinson"
 
 # Set environment variables for Kong version and architecture
 ARG KONG_PACKAGE_VERSION=1.4.1
+ENV KONG_PACKAGE_VERSION=${KONG_PACKAGE_VERSION}
+
 ARG KONG_VERSION=3.2.1
+ENV KONG_VERSION=${KONG_VERSION}
+
 ARG ARCH=amd64
+ENV ARCH=${ARCH}
 
 # Install curl, CA certificates, and download Kong package
 RUN set -e; \
