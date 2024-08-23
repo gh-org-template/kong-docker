@@ -84,7 +84,7 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         file: Dockerfile.${{ matrix.os.package_type }}
         build-args: |
-          ARCH=${{ matrix.architecture.docker }}
+          ARCH=${{ matrix.architecture }}
           DISTRIBUTION_OS=${{ matrix.os.os }}
           DISTRIBUTION_VERSION=${{ matrix.os.version }}
 
