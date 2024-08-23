@@ -13,12 +13,7 @@ ARG ARCH=amd64
 RUN set -e; \
     yum update -y && yum install -y \
         curl \
-        ca-certificates \
-    && if [ "$(uname -m)" = "aarch64" ]; then \
-        ARCH="arm64"; \
-    else \
-        ARCH="amd64"; \
-    fi; \
+        ca-certificates; \
     DOWNLOAD_URL="https://github.com/gh-org-template/kong-package/releases/download/${KONG_PACKAGE_VERSION}/kong-${KONG_VERSION}.${ARCH}.rpm"; \
     curl -fSL -o /tmp/kong.rpm $DOWNLOAD_URL; \
     yum localinstall -y /tmp/kong.rpm \
