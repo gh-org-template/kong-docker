@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         architecture: [{cpu: x86_64, docker: amd64},{cpu: aarch64, docker: arm64}]
-        os: [{package_type: deb, os: ubuntu, version: 22.04}, {package_type: deb, os: debian, version: 12-slim}, {package_type: apk, os: alpine, version: 3}, {package_type: rpm, os: amazonlinux, version: 2023}]
+        os: [{package_type: deb, os: ubuntu, version: 22.04}, {package_type: deb, os: debian, version: 12-slim}, {package_type: apk, os: alpine, version: 3}, {package_type: rpm, os: redhat/ubi9, version: latest}, {package_type: rpm, os: amazonlinux, version: 2023}]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -76,6 +76,7 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         file: Dockerfile.${{ matrix.os.package_type }}
         build-args: |
+          ARCH=${{ matrix.architecture.docker }}
           DISTRIBUTION_OS=${{ matrix.os.os }}
           DISTRIBUTION_VERSION=${{ matrix.os.version }}
 
@@ -85,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu, debian, alpine, amazonlinux]
+        os: [ubuntu, debian, alpine, redhat/ubi9, amazonlinux]
     steps:
     - name: Log in to the Container registry
       if: ${{ needs.release.outputs.published == 'true' }}
