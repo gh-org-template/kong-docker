@@ -50,11 +50,12 @@ jobs:
           type=ref,event=branch
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=${{ needs.release.outputs.release-git-tag }}
           type=sha
         flavor: |
           suffix=-${{ matrix.architecture }}-${{ matrix.os.os }}
         labels: |
-          org.opencontainers.image.version={{version}}
+          org.opencontainers.image.version=${{ needs.release.outputs.release-git-tag }}
           org.opencontainers.image.revision={{sha}}
           org.opencontainers.image.created={{date 'YYYY-MM-DDTHH:mm:ssZ'}}
 
