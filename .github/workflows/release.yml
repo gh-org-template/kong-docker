@@ -48,16 +48,19 @@ jobs:
         images: ghcr.io/gh-org-template/kong-docker
         tags: |
           type=ref,event=branch
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=raw,value=${{ needs.release.outputs.release-git-tag }}
           type=sha
+          {{ if needs.release.outputs.release-git-tag != '' }}
+          type=raw,value=${{ needs.release.outputs.release-git-tag }}
+          {{ endif }}
         flavor: |
           suffix=-${{ matrix.architecture }}-${{ matrix.os.os }}
         labels: |
-          org.opencontainers.image.version=${{ needs.release.outputs.release-git-tag }}
           org.opencontainers.image.revision={{sha}}
           org.opencontainers.image.created={{date 'YYYY-MM-DDTHH:mm:ssZ'}}
+          {{ if needs.release.outputs.release-git-tag != '' }}
+          org.opencontainers.image.version=${{ needs.release.outputs.release-git-tag }}
+          {{ endif }}
+
 
     - name: Log in to the Container registry
       if: ${{ needs.release.outputs.published == 'true' }}
