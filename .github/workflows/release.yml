@@ -74,6 +74,7 @@ jobs:
         push: ${{ needs.release.outputs.published == 'true' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        file: Dockerfile.${{ matrix.os.package_type }}
         build-args: |
           DISTRIBUTION_OS=${{ matrix.os.os }}
           DISTRIBUTION_VERSION=${{ matrix.os.version }}
