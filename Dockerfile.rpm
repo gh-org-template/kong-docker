@@ -17,8 +17,8 @@ ENV ARCH=${ARCH}
 # Install curl, CA certificates, and download Kong package
 RUN set -e; \
     yum update -y && yum install -y \
-        curl \
-        ca-certificates; \
+        ca-certificates \
+        curl --allowerasing; \
     DOWNLOAD_URL="https://github.com/gh-org-template/kong-package/releases/download/${KONG_PACKAGE_VERSION}/kong-${KONG_VERSION}.${ARCH}.rpm"; \
     curl -fSL -o /tmp/kong.rpm $DOWNLOAD_URL; \
     yum localinstall -y /tmp/kong.rpm \
