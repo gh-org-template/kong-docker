@@ -107,6 +107,8 @@ jobs:
     - name: Combine per OS images into a single multi-arch manifest
       if: ${{ needs.release.outputs.published == 'true' }}
       run: |
+        docker pull ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-aarch64-${{ matrix.os }}
+        docker pull ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-x86_64-${{ matrix.os }}
         docker manifest create ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-${{ matrix.os }} \
           ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-aarch64-${{ matrix.os }} \
           ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-x86_64-${{ matrix.os }}
@@ -129,6 +131,8 @@ jobs:
     - name: Create a final multi-arch manifest for Ubuntu only
       if: ${{ needs.release.outputs.published == 'true' }}
       run: |
+        docker pull ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-x86_64-ubuntu
+        docker pull ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-aarch64-ubuntu
         docker manifest create ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }} \
           ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-x86_64-ubuntu \
           ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-aarch64-ubuntu
