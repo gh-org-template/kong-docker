@@ -103,16 +103,18 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Flatten OS Name
+      run: echo "FLATTENED_OS=${{ matrix.os.os | gsub('/', '-') }}" >> $GITHUB_ENV
 
     - name: Combine per OS images into a single multi-arch manifest
       if: ${{ needs.release.outputs.published == 'true' }}
       run: |
-        docker pull --platform=linux/arm64 ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-${{ matrix.os }}
-        docker pull --platform=linux/amd64 ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-${{ matrix.os }}
-        docker manifest create ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-${{ matrix.os }} \
-          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-${{ matrix.os }} \
-          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-${{ matrix.os }}
-        docker manifest push ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-${{ matrix.os }}
+        docker pull --platform=linux/arm64 ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-${{ env.FLATTENED_OS }}
+        docker pull --platform=linux/amd64 ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-${{ env.FLATTENED_OS }}
+        docker manifest create ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-${{ env.FLATTENED_OS }} \
+          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-${{ env.FLATTENED_OS }} \
+          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-${{ env.FLATTENED_OS }}
+        docker manifest push ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-${{ env.FLATTENED_OS }}
 
   done:
     needs: [release, build-and-push, multi-arch]
