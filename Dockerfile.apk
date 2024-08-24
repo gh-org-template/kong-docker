@@ -9,13 +9,12 @@ ENV KONG_PACKAGE_VERSION=${KONG_PACKAGE_VERSION}
 ARG KONG_VERSION=3.2.1
 ENV KONG_VERSION=${KONG_VERSION}
 
-ARG ARCH=amd64
-ENV ARCH=${ARCH}
+ARG TARGETARCH
 
 # Install dependencies and download Kong package
 RUN set -ex; \
     apk add --no-cache bash curl ca-certificates libstdc++ libgcc openssl pcre perl tzdata libcap zlib zlib-dev; \
-    DOWNLOAD_URL="https://github.com/gh-org-template/kong-package/releases/download/${KONG_PACKAGE_VERSION}/kong-${KONG_VERSION}.${ARCH}.apk.tar.gz"; \
+    DOWNLOAD_URL="https://github.com/gh-org-template/kong-package/releases/download/${KONG_PACKAGE_VERSION}/kong-${KONG_VERSION}.${TARGETARCH}.apk.tar.gz"; \
     curl -fSL -o /tmp/kong.apk.tar.gz $DOWNLOAD_URL; \
     apk add --no-cache --virtual .build-deps tar gzip; \
     tar -C / -xzf /tmp/kong.apk.tar.gz; \

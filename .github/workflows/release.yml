@@ -32,7 +32,6 @@ jobs:
     name: Build and Push Docker Images
     strategy:
       matrix:
-        architecture: [amd64, arm64]
         os: [{package_type: deb, os: ubuntu, version: 22.04}, {package_type: deb, os: debian, version: 12-slim}, {package_type: apk, os: alpine, version: 3}, {package_type: rpm, os: amazonlinux, version: 2023}]
     runs-on: ubuntu-latest
     steps:
@@ -60,7 +59,7 @@ jobs:
           type=sha
           type=raw,value=${{ env.RELEASE_TAG }}
         flavor: |
-          suffix=-${{ matrix.architecture }}-${{ matrix.os.os }}
+          suffix=-${{ matrix.os.os }}
         labels: |
           org.opencontainers.image.version=${{ env.RELEASE_TAG }}
           org.opencontainers.image.revision={{sha}}
@@ -78,44 +77,17 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        platforms: linux/${{ matrix.architecture }}
+        platforms: linux/amd64,linux/arm64
         push: ${{ needs.release.outputs.published == 'true' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         file: Dockerfile.${{ matrix.os.package_type }}
         build-args: |
-          ARCH=${{ matrix.architecture }}
           DISTRIBUTION_OS=${{ matrix.os.os }}
           DISTRIBUTION_VERSION=${{ matrix.os.version }}
 
-  multi-arch:
-    needs: [release, build-and-push]
-    name: Create Multi-Arch Manifests
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [ubuntu, debian, alpine, amazonlinux]
-    steps:
-    - name: Log in to the Container registry
-      if: ${{ needs.release.outputs.published == 'true' }}
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Combine per OS images into a single multi-arch manifest
-      if: ${{ needs.release.outputs.published == 'true' }}
-      run: |
-        docker pull --platform=linux/arm64 ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-${{ matrix.os }}
-        docker pull --platform=linux/amd64 ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-${{ matrix.os }}
-        docker manifest create ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-${{ matrix.os }} \
-          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-${{ matrix.os }} \
-          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-${{ matrix.os }}
-        docker manifest push ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-${{ matrix.os }}
-
   done:
-    needs: [release, build-and-push, multi-arch]
+    needs: [release, build-and-push]
     name: Done
     if: always()
     runs-on: ubuntu-latest
@@ -131,12 +103,9 @@ jobs:
     - name: Create a final multi-arch manifest for Ubuntu only
       if: ${{ needs.release.outputs.published == 'true' }}
       run: |
-        docker pull --platform=linux/amd64 ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-ubuntu
-        docker pull --platform=linux/arm64 ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-ubuntu
-        docker manifest create ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }} \
-          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-ubuntu \
-          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-ubuntu
-        docker manifest push ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}
+        docker pull ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-ubuntu
+        docker tag ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-ubuntu ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}
+        docker push ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}
 
     - name: Check for Failed Jobs
       run: |
