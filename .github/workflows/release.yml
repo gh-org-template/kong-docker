@@ -49,6 +49,15 @@ jobs:
           echo "RELEASE_TAG=unreleased" >> $GITHUB_ENV
         fi
 
+    - name: Extract versions and SHAs from .env
+      run: |
+        export $(grep -v '^#' .env | xargs) && \
+        echo "KONG_VERSION=${KONG_VERSION}" >> $GITHUB_ENV && \
+        echo "KONG_SHA=${KONG_SHA}" >> $GITHUB_ENV && \
+        echo "OPENRESTY_VERSION=${OPENRESTY_VERSION}" >> $GITHUB_ENV && \
+        echo "LUAROCKS_VERSION=${LUAROCKS_VERSION}" >> $GITHUB_ENV && \
+        echo "PCRE_VERSION=${PCRE_VERSION}" >> $GITHUB_ENV >> $GITHUB_ENV
+
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@v5
@@ -58,12 +67,16 @@ jobs:
           type=ref,event=branch
           type=sha
           type=raw,value=${{ env.RELEASE_TAG }}
+          type=raw,value=${{ env.KONG_VERSION }}
         flavor: |
           suffix=-${{ matrix.os.os }}
         labels: |
           org.opencontainers.image.version=${{ env.RELEASE_TAG }}
-          org.opencontainers.image.revision={{sha}}
-          org.opencontainers.image.created={{date 'YYYY-MM-DDTHH:mm:ssZ'}}
+          org.opencontainers.image.revision=${{ env.KONG_SHA }}
+          org.opencontainers.image.openresty.version=${{ env.OPENRESTY_VERSION }}
+          org.opencontainers.image.luarocks.version=${{ env.LUAROCKS_VERSION }}
+          org.opencontainers.image.pcre.version=${{ env.PCRE_VERSION }}
+          org.opencontainers.image.kong.version=${{ env.KONG_VERSION }}
 
     - name: Log in to the Container registry
       if: ${{ needs.release.outputs.published == 'true' }}
