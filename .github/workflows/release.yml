@@ -113,9 +113,19 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Extract versions and SHAs from .env
+      run: |
+        export $(grep -v '^#' .env | xargs) && \
+        echo "KONG_VERSION=${KONG_VERSION}" >> $GITHUB_ENV
+
     - name: Create a final multi-arch manifest for Ubuntu only
       if: ${{ needs.release.outputs.published == 'true' }}
       run: |
+        docker manifest create ghcr.io/gh-org-template/kong-docker:${{ env.KONG_VERSION }} \
+          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-ubuntu \
+          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-ubuntu
+        docker manifest push ghcr.io/gh-org-template/kong-docker:${{ env.KONG_VERSION }}
+
         docker manifest create ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }} \
           ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-ubuntu \
           ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-ubuntu
