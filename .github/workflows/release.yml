@@ -113,6 +113,8 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - uses: actions/checkout@v4
+
     - name: Extract versions and SHAs from .env
       run: |
         export $(grep -v '^#' .env | xargs) && \
