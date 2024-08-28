@@ -64,12 +64,14 @@ jobs:
       with:
         images: ghcr.io/gh-org-template/kong-docker
         tags: |
-          type=ref,event=branch
-          type=sha
-          type=raw,value=${{ env.RELEASE_TAG }}
-          type=raw,value=${{ env.KONG_VERSION }}
-        flavor: |
-          suffix=-${{ matrix.os.os }}
+          type=ref,event=branch,suffix=-${{ matrix.os.os }}
+          type=sha,suffix=-${{ matrix.os.os }}
+          type=raw,value=${{ env.RELEASE_TAG }},suffix=-${{ matrix.os.os }}
+          type=raw,value=${{ env.KONG_VERSION }},suffix=-${{ matrix.os.os }}
+          type=semver,value=${{ env.KONG_VERSION }},pattern={{major}}.{{minor}},suffix=-${{ matrix.os.os }}
+          type=raw,value=${{ env.RELEASE_TAG }},enable=${{ matrix.os.os == 'ubuntu' }}
+          type=raw,value=${{ env.KONG_VERSION }},enable=${{ matrix.os.os == 'ubuntu' }}
+          type=semver,value=${{ env.KONG_VERSION }},pattern={{major}}.{{minor}},enable=${{ matrix.os.os == 'ubuntu' }}
         labels: |
           org.opencontainers.image.version=${{ env.RELEASE_TAG }}
           org.opencontainers.image.revision=${{ env.KONG_SHA }}
@@ -112,26 +114,6 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
-    - uses: actions/checkout@v4
-
-    - name: Extract versions and SHAs from .env
-      run: |
-        export $(grep -v '^#' .env | xargs) && \
-        echo "KONG_VERSION=${KONG_VERSION}" >> $GITHUB_ENV
-
-    - name: Create a final multi-arch manifest for Ubuntu only
-      if: ${{ needs.release.outputs.published == 'true' }}
-      run: |
-        docker manifest create ghcr.io/gh-org-template/kong-docker:${{ env.KONG_VERSION }} \
-          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-ubuntu \
-          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-ubuntu
-        docker manifest push ghcr.io/gh-org-template/kong-docker:${{ env.KONG_VERSION }}
-
-        docker manifest create ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }} \
-          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-amd64-ubuntu \
-          ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}-arm64-ubuntu
-        docker manifest push ghcr.io/gh-org-template/kong-docker:${{ needs.release.outputs.release-git-tag }}
 
     - name: Check for Failed Jobs
       run: |
