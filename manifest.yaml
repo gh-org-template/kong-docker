@@ -19,6 +19,14 @@ sources:
       repository: kong-package
       token: '{{ requiredEnv "UPDATECLI_GITHUB_TOKEN" }}'
       username: '{{ requiredEnv "UPDATECLI_GITHUB_ACTOR" }}'
+  kong-version:
+    name: Get current kong version
+    kind: file
+    spec:
+      file: .env
+      matchpattern: KONG_VERSION=.*
+    transformers:
+      - trimprefix: "KONG_VERSION="
 
 targets:
   kong-package-docker:
@@ -33,6 +41,18 @@ targets:
       instruction:
         keyword: "ARG"
         matcher: "KONG_PACKAGE_VERSION"
+  kong-version-docker:
+    name: "Update KONG VERSION ARG"
+    sourceid: kong-version
+    kind: dockerfile
+    spec:
+      files:
+        - Dockerfile.apk
+        - Dockerfile.deb
+        - Dockerfile.rpm
+      instruction:
+        keyword: "ARG"
+        matcher: "KONG_VERSION"
   kong-package-env-file:
     name: "Copy the kong-development env file"
     sourceid: kong-package
